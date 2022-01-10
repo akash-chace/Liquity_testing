@@ -76,6 +76,8 @@ async function setAddresses() {
         contractAddresses.activePool);
 
     console.log('All linking done!')
+    
+    return contractAddresses;
 }
 
 
