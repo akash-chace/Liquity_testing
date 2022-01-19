@@ -3,6 +3,7 @@
 pragma solidity 0.6.11;
 
 import './Interfaces/IActivePool.sol';
+import './Dependencies/IERC20.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
@@ -15,7 +16,7 @@ import "./Dependencies/console.sol";
  * Stability Pool, the Default Pool, or both, depending on the liquidation conditions.
  *
  */
-contract ActivePool is Ownable, CheckContract, IActivePool {
+contract ActivePool is Ownable, CheckContract, IActivePool{
     using SafeMath for uint256;
 
     string constant public NAME = "ActivePool";
@@ -24,15 +25,17 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     address public troveManagerAddress;
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
-    uint256 internal ETH;  // deposited ether tracker
+    uint256 internal WETH;  // deposited ether tracker
     uint256 internal LUSDDebt;
+    mapping(string => uint256) internal collTracker;
+    mapping(string => uint256) internal debtTracker;
 
     // --- Events ---
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolLUSDDebtUpdated(uint _LUSDDebt);
-    event ActivePoolETHBalanceUpdated(uint _ETH);
+    event ActivePoolWETHBalanceUpdated(uint _WETH);
 
     // --- Contract setters ---
 
@@ -59,8 +62,6 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
         emit TroveManagerAddressChanged(_troveManagerAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
-
-        _renounceOwnership();
     }
 
     // --- Getters for public variables. Required by IPool interface ---
@@ -70,20 +71,48 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     *
     *Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
     */
-    function getETH() external view override returns (uint) {
-        return ETH;
+    function getColl(string memory _collType) external view returns (uint) {
+        return collTracker[_collType];
     }
 
-    function getLUSDDebt() external view override returns (uint) {
-        return LUSDDebt;
+    function getDebt(string memory _collType) external view returns (uint) {
+        return debtTracker[_collType];
     }
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) external override {
+    // function addCollToPool(uint _collValue, address _tokenAddress, address _sender) external override {
+    //     _requireCallerIsBorrowerOperationsOrDefaultPool();
+    //     WETH = WETH.add(_collValue);
+    //     bool success = IERC20(_tokenAddress).transferFrom(_sender, address(this), _collValue);
+    //     require(success, "ActivePool: WETH transfer failed");
+    //     emit ActivePoolWETHBalanceUpdated(WETH);
+    // }
+
+    function addWETHToPool(uint _collValue, address _tokenAddress, address _sender) external override {
+        _addCollToPool("WETH", _collValue, _tokenAddress, _sender);
+    }
+
+    function addWBTCToPool(uint _collValue, address _tokenAddress, address _sender) external override {
+        _addCollToPool("WBTC", _collValue, _tokenAddress, _sender);
+    }
+
+    function addWMATICToPool(uint _collValue, address _tokenAddress, address _sender) external override {
+        _addCollToPool("WMATIC", _collValue, _tokenAddress, _sender);
+    }
+
+    function _addCollToPool(string memory collType, uint256 _collValue, address _tokenAddress, address _sender) internal {
+        _requireCallerIsBorrowerOperationsOrDefaultPool();
+        collTracker[collType] = collTracker[collType].add(_collValue);
+        bool success = IERC20(_tokenAddress).transferFrom(_sender, address(this), _collValue);
+        require(success, "ActivePool: WETH transfer failed");
+        emit ActivePoolWETHBalanceUpdated(WETH);
+    }
+
+    function sendWETH(address _account, uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        ETH = ETH.sub(_amount);
-        emit ActivePoolETHBalanceUpdated(ETH);
+        WETH = WETH.sub(_amount);
+        emit ActivePoolWETHBalanceUpdated(WETH);
         emit EtherSent(_account, _amount);
 
         (bool success, ) = _account.call{ value: _amount }("");
@@ -128,9 +157,9 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     // --- Fallback function ---
 
-    receive() external payable {
-        _requireCallerIsBorrowerOperationsOrDefaultPool();
-        ETH = ETH.add(msg.value);
-        emit ActivePoolETHBalanceUpdated(ETH);
-    }
+    // receive() external payable {
+    //     _requireCallerIsBorrowerOperationsOrDefaultPool();
+    //     ETH = ETH.add(msg.value);
+    //     emit ActivePoolETHBalanceUpdated(ETH);
+    // }
 }

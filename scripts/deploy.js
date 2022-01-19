@@ -1,11 +1,11 @@
 const fs = require('fs');
 
-async function deployContracts(deployer, user1, user2) {
-    // const [deployer, user1, user2] = await ethers.getSigners();
+async function deployContracts() {
+    const [deployer] = await ethers.getSigners();
 
     console.log("Deploying contracts with the account:", deployer.address);
     console.log("Account balance:", (await deployer.getBalance()).toString());
-  
+
     const PriceFeed = await ethers.getContractFactory("PriceFeed");
     const priceFeed = await PriceFeed.deploy();
     console.log("priceFeed address:", priceFeed.address);
@@ -66,51 +66,71 @@ async function deployContracts(deployer, user1, user2) {
 
     const LUSDToken = await ethers.getContractFactory("LUSDToken");
     const lUSDToken = await LUSDToken.deploy(troveManager.address,
-                                             stabilityPool.address,
-                                             borrowerOperations.address);
+                                            stabilityPool.address,
+                                             borrowerOperations.address, {gasLimit: 10000000});
     console.log("lUSDToken address:", lUSDToken.address);
 
     const LQTYToken = await ethers.getContractFactory("LQTYToken");
     const lQTYToken = await LQTYToken.deploy(communityIssuance.address
                                             ,lQTYStaking.address
                                             ,lockupContractFactory.address
-                                            ,user1.address
                                             ,deployer.address
-                                            ,user2.address);
+                                            ,deployer.address
+                                            ,deployer.address, {gasLimit: 10000000});
     console.log("LqtyToken address:", lQTYToken.address);
 
     const Unipool = await ethers.getContractFactory("Unipool");
     const unipool = await Unipool.deploy()
     console.log("Unipool address:", unipool.address);
 
-    let contractAddresses = {
-      'unipool': unipool.address,
-      'priceFeed': priceFeed.address,
-      'sortedTroves': sortedTroves.address,
-      'troveManager': troveManager.address,
-      'activePool' : activePool.address,
-      'stabilityPool' : stabilityPool.address,
-      'gasPool': gasPool.address,
-      'defaultPool': defaultPool.address,
-      'collSurplusPool': collSurplusPool.address,
-      'borrowerOperations': borrowerOperations.address,
-      'hintHelpers': hintHelpers.address,
-      'lQTYStaking': lQTYStaking.address,
-      'lockupContractFactory': lockupContractFactory.address,
-      'communityIssuance': communityIssuance.address,
-      'lUSDToken': lUSDToken.address,
-      'lQTYToken': lQTYToken.address,
+    // let contractAddresses = {
+    //   'unipool': unipool.address,
+    //   'priceFeed': priceFeed.address,
+    //   'sortedTroves': sortedTroves.address,
+    //   'troveManager': troveManager.address,
+    //   'activePool' : activePool.address,
+    //   'stabilityPool' : stabilityPool.address,
+    //   'gasPool': gasPool.address,
+    //   'defaultPool': defaultPool.address,
+    //   'collSurplusPool': collSurplusPool.address,
+    //   'borrowerOperations': borrowerOperations.address,
+    //   'hintHelpers': hintHelpers.address,
+    //   'lQTYStaking': lQTYStaking.address,
+    //   'lockupContractFactory': lockupContractFactory.address,
+    //   'communityIssuance': communityIssuance.address,
+    //   'lUSDToken': lUSDToken.address,
+    //   'lQTYToken': lQTYToken.address,
+    // }
+    let contractInstances = {
+      'unipool': unipool,
+      'priceFeed': priceFeed,
+      'sortedTroves': sortedTroves,
+      'troveManager': troveManager,
+      'activePool' : activePool,
+      'stabilityPool' : stabilityPool,
+      'gasPool': gasPool,
+      'defaultPool': defaultPool,
+      'collSurplusPool': collSurplusPool,
+      'borrowerOperations': borrowerOperations,
+      'hintHelpers': hintHelpers,
+      'lQTYStaking': lQTYStaking,
+      'lockupContractFactory': lockupContractFactory,
+      'communityIssuance': communityIssuance,
+      'lUSDToken': lUSDToken,
+      'lQTYToken': lQTYToken,
     }
-    return contractAddresses;
+
     // console.log("Writing the addresses...")
     // contractAddresses = JSON.stringify(contractAddresses, null, 2);
     // fs.writeFileSync('contractAddresses.json',contractAddresses);
     // console.log('Done!')
+
+    return contractInstances;
 }
 
-// async function main() {
-//     await deployContracts();
-//   }
+async function main() {
+    await deployContracts();
+  }
   
 // main()
 //   .then(() => process.exit(0))

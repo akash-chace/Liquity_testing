@@ -9,6 +9,8 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
+// import "hardhat/console.sol";
+
 
 /*
 * A sorted doubly linked list with nodes sorted in descending order.
@@ -90,7 +92,6 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
         emit TroveManagerAddressChanged(_troveManagerAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
 
-        _renounceOwnership();
     }
 
     /*
@@ -103,7 +104,6 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
 
     function insert (address _id, uint256 _NICR, address _prevId, address _nextId) external override {
         ITroveManager troveManagerCached = troveManager;
-
         _requireCallerIsBOorTroveM(troveManagerCached);
         _insert(troveManagerCached, _id, _NICR, _prevId, _nextId);
     }

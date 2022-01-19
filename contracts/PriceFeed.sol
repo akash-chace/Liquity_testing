@@ -129,23 +129,23 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     */
     function fetchPrice() external override returns (uint) {
         // Get current and previous price data from Chainlink, and current price data from Tellor
-        // ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
-        // ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
-        // // TellorResponse memory tellorResponse = _getCurrentTellorResponse();
+        ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
+        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.roundId, chainlinkResponse.decimals);
+        // TellorResponse memory tellorResponse = _getCurrentTellorResponse();
 
-        // // --- CASE 1: System fetched last price from Chainlink  ---
-        // if (status == Status.chainlinkWorking) {
-        //     // If Chainlink is broken, try Tellor
-        //     // if (_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse)) {
-        //     //     // If Tellor is broken then both oracles are untrusted, so return the last good price
-        //     //     if (_tellorIsBroken(tellorResponse)) {
-        //     //         _changeStatus(Status.bothOraclesUntrusted);
-        //     //         return lastGoodPrice; 
-        //     //     }
-        //     //     /*
-        //     //     * If Tellor is only frozen but otherwise returning valid data, return the last good price.
-        //     //     * Tellor may need to be tipped to return current data.
-        //     //     */
+        // --- CASE 1: System fetched last price from Chainlink  ---
+        if (status == Status.chainlinkWorking) {
+            // If Chainlink is broken, try Tellor
+            // if (_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse)) {
+            //     // If Tellor is broken then both oracles are untrusted, so return the last good price
+            //     if (_tellorIsBroken(tellorResponse)) {
+            //         _changeStatus(Status.bothOraclesUntrusted);
+            //         return lastGoodPrice; 
+            //     }
+            //     /*
+            //     * If Tellor is only frozen but otherwise returning valid data, return the last good price.
+            //     * Tellor may need to be tipped to return current data.
+            //     */
             //     if (_tellorIsFrozen(tellorResponse)) {
             //         _changeStatus(Status.usingTellorChainlinkUntrusted);
             //         return lastGoodPrice;
@@ -207,9 +207,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             // }   
 
             // If Chainlink is working, return Chainlink current price (no status change)
-            // return _storeChainlinkPrice(chainlinkResponse);
-
-        // }
+            return _storeChainlinkPrice(chainlinkResponse);
+        }
 
 
         // --- CASE 2: The system fetched last price from Tellor --- 
@@ -333,7 +332,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         //     // return Chainlink price (no status change)
         //     return _storeChainlinkPrice(chainlinkResponse);
         // }
-    
+    }
 
     // --- Helper functions ---
 
@@ -439,9 +438,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     //     */
     //     return percentPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     // }
-    uint256 value = 3400;
-    return value;
-}
 
     function _scaleChainlinkPriceByDigits(uint _price, uint _answerDigits) internal pure returns (uint) {
         /*
@@ -574,4 +570,3 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         }
     }
 }
-
